@@ -2,41 +2,47 @@ package migrate
 
 import (
 	"context"
-	"errors"
+	"database/sql"
 	"fmt"
+	"time"
 
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/lib/pq"
+	"github.com/pressly/goose/v3"
 	"go.uber.org/zap"
 )
 
-func RunMigrations(ctx context.Context, migrationsPath, dbURL string, logger *zap.Logger) error {
-	migURL := fmt.Sprintf("file://%s", migrationsPath)
-	m, err := migrate.New(migURL, dbURL)
+func RunMigrations(ctx context.Context, migrationsDir, dbURL string, logger *zap.Logger) error {
+	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
-		return fmt.Errorf("error: %w", err)
+		return fmt.Errorf("failed to open db: %w", err)
 	}
+	defer func(db *sql.DB) {
+		err2 := db.Close()
+		if err2 != nil {
+			logger.Error("failed to close database", zap.Error(err2))
+		}
+	}(db)
+
+	goose.SetBaseFS(nil) // если миграции в локальной папке, это не нужно менять
+
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
 	done := make(chan error, 1)
 	go func() {
-		err := m.Up()
-		if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-			done <- err
-			return
-		}
-		done <- nil
+		err := goose.Up(db, migrationsDir)
+		done <- err
 	}()
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return fmt.Errorf("migrations timeout: %w", ctx.Err())
 	case err := <-done:
 		if err != nil {
-			logger.Error("migrate up failed", zap.Error(err))
-			return fmt.Errorf("error: %w", err)
+			logger.Error("goose migrations failed", zap.Error(err))
+			return fmt.Errorf("migrations failed: %w", err)
 		}
-		logger.Info("migrations applied successfully")
+		logger.Info("migrations applied successfully with goose")
 		return nil
 	}
 }
