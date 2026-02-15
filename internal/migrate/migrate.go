@@ -16,13 +16,7 @@ func RunMigrations(ctx context.Context, migrationsDir, dbURL string, logger *zap
 	if err != nil {
 		return fmt.Errorf("failed to open db: %w", err)
 	}
-	defer func(db *sql.DB) {
-		err2 := db.Close()
-		if err2 != nil {
-			logger.Error("failed to close database", zap.Error(err2))
-		}
-	}(db)
-
+	
 	goose.SetBaseFS(nil) // если миграции в локальной папке, это не нужно менять
 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)

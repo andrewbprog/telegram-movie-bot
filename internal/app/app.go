@@ -9,8 +9,13 @@ import (
 	"syscall"
 	"tlgbs/config"
 	"tlgbs/internal/bot"
+	"tlgbs/internal/gateway"
+	"tlgbs/internal/infrastructure/kafka"
+	tgclient "tlgbs/internal/infrastructure/telegram-client"
 	"tlgbs/internal/migrate"
 	"tlgbs/internal/postgres"
+	"tlgbs/internal/repository"
+	"tlgbs/internal/service"
 )
 
 func Start(ctx context.Context) error {
@@ -20,41 +25,52 @@ func Start(ctx context.Context) error {
 
 	logger, err := zap.NewProduction()
 	if err != nil {
-		logger.Error("failed to init zap logger", zap.Error(err))
-		return fmt.Errorf("logger error: %w", err)
+		return fmt.Errorf("failed to init zap logger: %w", err)
 	}
 
 	cfg, err := config.New()
 	if err != nil {
-		logger.Error("init configuration failed", zap.Error(err))
-		return fmt.Errorf("config error: %w", err)
+		logger.Error("failed to load configuration", zap.Error(err))
+		return fmt.Errorf("failed to load config: %w", err)
 	}
 
 	migCtx, migCancel := context.WithTimeout(ctx, cfg.MigrationTimeout)
 	defer migCancel()
 
 	if err := migrate.RunMigrations(migCtx, "migrations", cfg.Database.DatabaseURL(), logger); err != nil {
-		logger.Error("migrations failed", zap.Error(err))
-		return fmt.Errorf("migrations error: %w", err)
+		logger.Error("database migrations failed", zap.Error(err))
+		return fmt.Errorf("failed to run database migrations: %w", err)
 	}
 
 	pool, err := postgres.NewPool(ctx, cfg.Database.DatabaseURL())
 	if err != nil {
-		logger.Error("db connection failed", zap.Error(err))
-		return fmt.Errorf("pool error: %w", err)
+		logger.Error("failed to connect to PostgreSQL", zap.Error(err))
+		return fmt.Errorf("failed to connect to PostgreSQL: %w", err)
 	}
 	defer pool.Close()
+	repo := repository.NewUserRepository(pool)
+	tg := tgclient.NewTgClient(cfg.TelegramToken)
+	notifSvc := service.NewNotificationService(repo, tg, logger)
 
-	b, err := bot.NewBot(cfg.TelegramToken, logger)
+	// --- Запуск Consumer ---
+	go func() {
+		if err := kafka.StartConsumer(ctx, cfg.Kafka.Brokers, cfg.Kafka.Topic, cfg.Kafka.GroupID, notifSvc, logger); err != nil {
+			logger.Error("kafka consumer failed", zap.Error(err))
+		}
+	}()
+
+	// --- Инициализация Telegram-бота ---
+	gwClient := gateway.NewClient(cfg.GatewayURL, cfg.GatewayTimeout)
+	b, err := bot.NewBot(cfg.TelegramToken, repo, gwClient, logger)
 	if err != nil {
-		logger.Error("failed to init telegram bot", zap.Error(err))
-		return fmt.Errorf("bot error: %w", err)
+		logger.Error("failed to initialize telegram bot", zap.Error(err))
+		return fmt.Errorf("failed to initialize telegram bot: %w", err)
 	}
-	go b.Run(ctx)
-	logger.Info("telegram bot started")
+
+	// Запуск Telegram-бота
+	go b.BotRun(ctx)
 
 	<-ctx.Done()
 	logger.Info("context cancelled, shutting down app")
-
 	return nil
 }
