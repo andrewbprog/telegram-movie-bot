@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-	// запуск приложения
 	ctx := context.Background()
 
 	if err := app.Start(ctx); err != nil {
