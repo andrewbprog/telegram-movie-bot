@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"tlgbs/internal/infrastructure/models"
+	"telegram-movie-bot/internal/infrastructure/models"
 )
 
 type TgClient struct {

@@ -6,8 +6,8 @@ import (
 	"errors"
 	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap"
-	"tlgbs/internal/infrastructure/models"
-	"tlgbs/internal/service"
+	"telegram-movie-bot/internal/infrastructure/models"
+	"telegram-movie-bot/internal/service"
 )
 
 func StartConsumer(ctx context.Context, brokers []string, topic, groupID string, notifySvc *service.NotificationService, logger *zap.Logger) error {

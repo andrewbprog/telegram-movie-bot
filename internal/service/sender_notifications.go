@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"go.uber.org/zap"
-	tgclient "tlgbs/internal/infrastructure/telegram-client"
-	"tlgbs/internal/repository"
+	tgclient "telegram-movie-bot/internal/infrastructure/telegram-client"
+	"telegram-movie-bot/internal/repository"
 )
 
 const (

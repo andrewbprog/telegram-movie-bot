@@ -6,7 +6,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-	"tlgbs/internal/repository/models"
+	"telegram-movie-bot/internal/repository/models"
 )
 
 const msgText = "👋 Привет! Я бот для рекомендации фильмов!\n\n" +

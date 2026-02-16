@@ -1,4 +1,4 @@
-module tlgbs
+module telegram-movie-bot
 
 go 1.23.0
 

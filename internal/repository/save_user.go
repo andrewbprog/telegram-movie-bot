@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
-	"tlgbs/internal/repository/models"
+	"telegram-movie-bot/internal/repository/models"
 )
 
 const (

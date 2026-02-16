@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 	"github.com/caarlos0/env/v11"
+	"telegram-movie-bot/internal/postgres"
 	"time"
-	"tlgbs/internal/postgres"
 )
 
 type KafkaConfig struct {

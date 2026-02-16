@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"log"
-	"tlgbs/internal/app"
+	"telegram-movie-bot/internal/app"
 )
 
 func main() {

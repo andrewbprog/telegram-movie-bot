@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"tlgbs/internal/gateway/models"
+	"telegram-movie-bot/internal/gateway/models"
 )
 
 const urlGetRandomMovie = "/movies/random?user_id="

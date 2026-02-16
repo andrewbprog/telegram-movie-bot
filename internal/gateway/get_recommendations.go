@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"tlgbs/internal/gateway/models"
+	"telegram-movie-bot/internal/gateway/models"
 )
 
 const urlGetRecommendations = "/movies/recommendations?user_id="

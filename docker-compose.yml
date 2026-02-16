@@ -77,7 +77,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: tlgbs
+    container_name: telegram-movie-bot
     env_file:
       - .env
     depends_on:

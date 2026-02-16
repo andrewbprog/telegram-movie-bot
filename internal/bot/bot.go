@@ -6,8 +6,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"go.uber.org/zap"
 	"strconv"
-	"tlgbs/internal/gateway"
-	"tlgbs/internal/repository"
+	"telegram-movie-bot/internal/gateway"
+	"telegram-movie-bot/internal/repository"
 )
 
 const (
