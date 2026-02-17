@@ -75,8 +75,8 @@ services:
 
   telegram_bot_service:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: ../Dockerfile
     container_name: telegram-movie-bot
     env_file:
       - .env
